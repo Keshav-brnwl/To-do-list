@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal Bucket List</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+        }
+
+        /* Header */
+        header {
+            background: #007BFF;
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* Container */
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        /* Bucket List */
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: #e3f2fd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+
+        li:hover {
+            background: #bbdefb;
+            transform: scale(1.03);
+        }
+
+        /* Completed Tasks */
+        li.completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+
+        .checkmark {
+            color: green;
+            font-size: 20px;
+        }
+
+        /* Buttons */
+        .buttons {
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            margin: 5px;
+        }
+
+        .add-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .restore-btn {
+            background: #ffc107;
+            color: black;
+        }
+
+        .add-btn:hover {
+            background: #218838;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .restore-btn:hover {
+            background: #e0a800;
+        }
+
+        /* Input & Select */
+        input, select {
+            width: 80%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        select {
+            height: 100px;
+        }
+
+        /* Deleted Items Section */
+        #deletedItems {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8d7da;
+            color: #721c24;
+            border-radius: 5px;
+            display: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                width: 90%;
+            }
+
+            select {
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>My Personal Bucket List</header>
+
+    <div class="container">
+        <ul id="bucketList">
+            <li onclick="toggleComplete(this)">Travel to Japan <span class="checkmark">✔</span></li>
+            <li onclick="toggleComplete(this)" class="completed">Skydiving <span class="checkmark">✔</span></li>
+            <li onclick="toggleComplete(this)">Learn a new language <span class="checkmark">✔</span></li>
+            <li onclick="toggleComplete(this)">Scuba diving in the Maldives <span class="checkmark">✔</span></li>
+            <li onclick="toggleComplete(this)" class="completed">Start a blog <span class="checkmark">✔</span></li>
+        </ul>
+
+        <input type="text" id="newItem" placeholder="Add new item...">
+        <div class="buttons">
+            <button class="add-btn" onclick="addItem()">Add More</button>
+        </div>
+
+        <select id="deleteSelect" multiple>
+            <!-- Items will be dynamically added here -->
+        </select>
+        <button class="delete-btn" onclick="deleteItems()">Delete Selected</button>
+
+        <div id="deletedItems">
+            <h3>Deleted Items</h3>
+            <ul id="deletedList"></ul>
+            <button class="restore-btn" onclick="restoreItems()">Restore Selected</button>
+        </div>
+    </div>
+
+    <script>
+        let deletedItems = [];
+
+        function addItem() {
+            let input = document.getElementById("newItem");
+            let itemText = input.value.trim();
+            if (itemText === "") {
+                alert("Please enter an item!");
+                return;
+            }
+
+            let list = document.getElementById("bucketList");
+            let newItem = document.createElement("li");
+            newItem.innerHTML = itemText + ' <span class="checkmark">✔</span>';
+            newItem.setAttribute("onclick", "toggleComplete(this)");
+            list.appendChild(newItem);
+            input.value = "";
+
+            updateDeleteDropdown();
+        }
+
+        function deleteItems() {
+            let select = document.getElementById("deleteSelect");
+            let list = document.getElementById("bucketList");
+            let selectedOptions = Array.from(select.selectedOptions).map(option => option.value);
+
+            if (selectedOptions.length === 0) {
+                alert("Please select at least one item to delete!");
+                return;
+            }
+
+            let items = Array.from(list.getElementsByTagName("li"));
+            selectedOptions.forEach(selectedText => {
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].textContent.includes(selectedText)) {
+                        deletedItems.push(items[i].textContent.replace("✔", "").trim());
+                        list.removeChild(items[i]);
+                        break;
+                    }
+                }
+            });
+
+            updateDeleteDropdown();
+            updateDeletedItems();
+        }
+
+        function restoreItems() {
+            let deletedList = document.getElementById("deletedList");
+            let selectedOptions = Array.from(deletedList.getElementsByTagName("li"))
+                .filter(li => li.classList.contains("selected"))
+                .map(li => li.textContent);
+
+            if (selectedOptions.length === 0) {
+                alert("Please select an item to restore!");
+                return;
+            }
+
+            selectedOptions.forEach(itemText => {
+                let list = document.getElementById("bucketList");
+                let newItem = document.createElement("li");
+                newItem.innerHTML = itemText + ' <span class="checkmark">✔</span>';
+                newItem.setAttribute("onclick", "toggleComplete(this)");
+                list.appendChild(newItem);
+            });
+
+            deletedItems = deletedItems.filter(item => !selectedOptions.includes(item));
+            updateDeletedItems();
+            updateDeleteDropdown();
+        }
+
+        function toggleComplete(item) {
+            item.classList.toggle("completed");
+        }
+
+        function updateDeleteDropdown() {
+            let select = document.getElementById("deleteSelect");
+            select.innerHTML = '';
+
+            let items = document.getElementById("bucketList").getElementsByTagName("li");
+            for (let i = 0; i < items.length; i++) {
+                let option = document.createElement("option");
+                option.value = items[i].textContent.replace("✔", "").trim();
+                option.textContent = items[i].textContent.replace("✔", "").trim();
+                select.appendChild(option);
+            }
+        }
+
+        function updateDeletedItems() {
+            let deletedList = document.getElementById("deletedList");
+            deletedList.innerHTML = '';
+
+            deletedItems.forEach(item => {
+                let li = document.createElement("li");
+                li.textContent = item;
+                li.onclick = () => li.classList.toggle("selected");
+                deletedList.appendChild(li);
+            });
+
+            document.getElementById("deletedItems").style.display = deletedItems.length > 0 ? "block" : "none";
+        }
+
+        updateDeleteDropdown();
+    </script>
+
+</body>
+</html>
